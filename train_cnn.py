@@ -73,8 +73,9 @@ import tensorflow as tf
 import time
 
 
-TRAINING_SET = 'checkers_library_full_v2.pickle'
-PARAM_DIR = 'parameters/convnet_100k_full_no_reg/'
+TRAINING_SET = 'checkers_library_500.pickle'
+PARAM_DIR = 'parameters/sample_training/'
+LOG_DIR = '/tmp/tensorflow'
 
 
 def accuracy(preds, labs):
@@ -144,6 +145,8 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, ckpt_dir):
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_yTr))
         loss += lambda_loss * (tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))
 
+        tf.summary.histogram("loss", loss)
+
         # Optimizer (Built into tensor flow, based on gradient descent)
         batch = tf.Variable(0)
         learning_rate = tf.train.exponential_decay(0.01, batch * batch_size, nTr, 0.95, staircase=True)
@@ -170,13 +173,20 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, ckpt_dir):
         # Run model
         tf.initialize_all_variables().run()
         print('Graph initialized ...')
+
+        writer = tf.summary.FileWriter(LOG_DIR, session.graph)
+        summaries = tf.summary.merge_all()
+
         t = time.time()
         for step in range(num_steps):
             offset = (step * batch_size) % (nTr - batch_size)
             batch_data = xTr[offset:(offset + batch_size), :]
             batch_labels = yTr[offset:(offset + batch_size), :]
             feed_dict = {tf_xTr: batch_data, tf_yTr: batch_labels}
-            _ = session.run([optimizer], feed_dict=feed_dict)
+
+            summary, _ = session.run([summaries, optimizer], feed_dict=feed_dict)
+
+            writer.add_summary(summary, global_step=step)
 
             if step % 5000 == 0:
                 l, preds_Train, preds_Test = session.run([loss, preds_Tr, preds_Te], feed_dict=feed_dict)
