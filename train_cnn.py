@@ -70,8 +70,11 @@ import numpy as np
 import pandas as pd
 from six.moves import cPickle as pickle
 import tensorflow as tf
-import read_pickle as rp
 import time
+
+
+TRAINING_SET = 'checkers_library_full_v2.pickle'
+PARAM_DIR = 'parameters/convnet_100k_full_no_reg/'
 
 
 def accuracy(preds, labs):
@@ -138,7 +141,7 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, ckpt_dir):
             return tf.matmul(h3_out, w4) + b4
 
         logits = model(tf_xTr, 1)
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_yTr))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_yTr))
         loss += lambda_loss * (tf.nn.l2_loss(w1) + tf.nn.l2_loss(w2) + tf.nn.l2_loss(w3))
 
         # Optimizer (Built into tensor flow, based on gradient descent)
@@ -221,8 +224,11 @@ if __name__ == '__main__':
     label_width = 4
 
     # Extract training data into win_dict, loss_dict, and draw_dict
-    trainset_file = 'checkers_library_full_v2.pickle'
-    win_dict, loss_dict, draw_dict = rp.read_pickle(trainset_file)
+    trainset_file = TRAINING_SET
+    p = pd.read_pickle(trainset_file)
+    win_dict = p['win_library']
+    loss_dict = p['loss_library']
+    draw_dict = p['draw_library']
     print('Finished loading data.')
 
     # Create numpy arrays xTr(nx8x4) and yTr(nx32x4), where n = number of training examples
@@ -259,7 +265,7 @@ if __name__ == '__main__':
     xTr = np.reshape(xTr, (-1, board_height, board_width, num_channels))
     xTe = np.reshape(xTe, (-1, board_height, board_width, num_channels))
 
-    param_dir = 'parameters_v2/convnet_100k_full_no_reg/'
+    param_dir = PARAM_DIR
 
     deepnet(num_steps=150001,
             lambda_loss=0,
