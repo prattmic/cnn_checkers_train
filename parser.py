@@ -184,7 +184,7 @@ if __name__ == '__main__':
     result = 0
     data = list()
     contestants = ['black', 'white']
-    data_source = 'OCA_2.0.pdn'
+    data_source = '../data/OCA_2.0.pdn'
     odd_list = [0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27]
     even_list = [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
     game_corrupt = False
