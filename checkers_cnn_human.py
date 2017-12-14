@@ -1,6 +1,7 @@
 # Title: checkers_v6.py
 # Author: Chris Larson
 # CS-6700 Final Project
+# All Rights Reserved (2016)
 
 """This is a checkers engine that generates moves using a convolutional neural network that has been trained
 on ~23k masters level checkers games that were recorded from checkers competitions that took place in the 1800 & 1900's.
@@ -27,9 +28,20 @@ class Board(object):
             return self.state
 
     def print_board(self):
+
+        print('  32  31  30  29')
+        print('28  27  26  25')
+        print('  24  23  22  21')
+        print('20  19  18  17')
+        print('  16  15  14  13')
+        print('12  11  10  09')
+        print('  08  07  06  05')
+        print('04  03  02  01')
+        print('\n')
         for j in range(8):
             for i in range(4):
-                if j % 2 == 0: print(' ', end=' ')
+                if j % 2 == 0:
+                    print(' ', end=' ')
                 if self.state[3 - i][7 - j] == 1:
                     print('x', end=' ')
                 elif self.state[3 - i][7 - j] == 3:
@@ -40,7 +52,8 @@ class Board(object):
                     print('o', end=' ')
                 else:
                     print('O', end=' ')
-                if j % 2 != 0: print(' ', end=' ')
+                if j % 2 != 0:
+                    print(' ', end=' ')
             print('')
 
     def find_jumps(self, player_type):
@@ -177,6 +190,7 @@ def play():
     print('====================================================================================================================================================')
     print('CNN Checkers Engine')
     print('Created by Chris Larson')
+    print('All Rights Reserved (2016)')
     print('\n')
     print('You are playing the white pieces, computer is playing black.')
     print('There is no GUI for this game. Feel free to run an external program in 2-player mode alongside this game.')
@@ -268,14 +282,14 @@ def play():
 
                         for move in moves_list:
                             if move == available_jumps[0]:
-                                print("There is one jump available. This move was choice %d." % count)
+                                # print("There is one jump available. This move was choice %d." % count)
                                 move_predicted = True
                                 break
                             else:
                                 count += 1
 
                         if not move_predicted:
-                            print('Model did not output the available jumps. Forced move.')
+                            # print('Model did not output the available jumps. Forced move.')
                             jumps_not_predicted += 1
 
                         initial_position = available_jumps[0][0]
@@ -286,7 +300,7 @@ def play():
                         move_illegal = board.update(available_jumps[0], player_type=player_type, move_type=move_type)
 
                         if move_illegal:
-                            print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[0]) + 1))
+                            # print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[0]) + 1))
                             game_aborted = True
                         else:
                             print("Black move: %s" % (np.array(available_jumps[0]) + 1))
@@ -309,7 +323,8 @@ def play():
                                 move_illegal = board.update(move, player_type=player_type, move_type=move_type)
 
                                 if move_illegal:
-                                    print('Model and Find jumps function predicted an invalid move: %s' % (np.array(move) + 1))
+                                    pass
+                                    # print('Model and Find jumps function predicted an invalid move: %s' % (np.array(move) + 1))
                                 else:
                                     print("Black move: %s" % (np.array(move) + 1))
                                     move_predicted = True
@@ -320,7 +335,7 @@ def play():
                                     break
 
                         if not move_predicted:
-                            print('Model did not output any of the available jumps. Move picked randomly among valid options.')
+                            # print('Model did not output any of the available jumps. Move picked randomly among valid options.')
                             jumps_not_predicted += 1
                             ind = np.random.randint(0, len(available_jumps))
 
@@ -332,7 +347,7 @@ def play():
                             move_illegal = board.update(available_jumps[ind], player_type=player_type, move_type=move_type)
 
                             if move_illegal:
-                                print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[ind]) + 1))
+                                # print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[ind]) + 1))
                                 game_aborted = True
                             else:
                                 available_jumps = board.find_jumps(player_type=player_type)
@@ -354,7 +369,7 @@ def play():
                         move_illegal = board.update(move, player_type=player_type, move_type=move_type)
 
                         if move_illegal:
-                            print('model predicted invalid move (%s)' % (np.array(move) + 1))
+                            # print('model predicted invalid move (%s)' % (np.array(move) + 1))
                             print(probs[count - 1])
                             invalid_move_attempts += 1
                             count += 1
