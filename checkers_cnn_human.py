@@ -29,19 +29,19 @@ class Board(object):
     def print_board(self):
         for j in range(8):
             for i in range(4):
-                if j % 2 == 0: print ' ',
+                if j % 2 == 0: print(' ', end=' ')
                 if self.state[3 - i][7 - j] == 1:
-                    print 'x',
+                    print('x', end=' ')
                 elif self.state[3 - i][7 - j] == 3:
-                    print 'X',
+                    print('X', end=' ')
                 elif self.state[3 - i][7 - j] == 0:
-                    print '-',
+                    print('-', end=' ')
                 elif self.state[3 - i][7 - j] == -1:
-                    print 'o',
+                    print('o', end=' ')
                 else:
-                    print 'O',
-                if j % 2 != 0: print ' ',
-            print ''
+                    print('O', end=' ')
+                if j % 2 != 0: print(' ', end=' ')
+            print('')
 
     def find_jumps(self, player_type):
 
@@ -190,7 +190,7 @@ def play():
     print('\n')
 
     # Start game
-    raw_input("To begin, press Enter:")
+    input("To begin, press Enter:")
     end_game = False
     winner = ''
     while True:
@@ -206,7 +206,7 @@ def play():
             while move_illegal:
 
                 # Prompt player for input
-                move = raw_input("Enter move as 'pos_init, pos_final':")
+                move = input("Enter move as 'pos_init, pos_final':")
 
                 if move[::-1][:4][::-1] == 'wins':
                     winner = move[0:len(move) - 5]
@@ -403,7 +403,7 @@ if __name__ == '__main__':
     white_chkr = -black_chkr
     white_king = -black_king
     white_king_pos = [0, 1, 2, 3]
-    valid_positions = range(32)
+    valid_positions = list(range(32))
     odd_list = [0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27]
     even_list = [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
     jumps = pd.read_csv(filepath_or_buffer='jumps.csv', header=-1, index_col=None)
