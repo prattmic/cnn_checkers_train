@@ -1,3 +1,2 @@
 *.pickle
-parameters/
 __pycache__/
