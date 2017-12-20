@@ -12,6 +12,10 @@ import pandas as pd
 import predict_move
 
 
+AI1_PARAMS = 'parameters/convnet_150k_full/model.ckpt-150001'
+AI2_PARAMS = 'parameters/sample_training/model.ckpt-10001'
+
+
 class Board(object):
 
     global jumps, empty, odd_list
@@ -108,10 +112,8 @@ class Board(object):
         board_state = self.board_state(player_type=player_type)
         moves_list = list()
 
-        if player_type == 'white':
-            moves, probs = predict_move.predict_nn(board_state, output=output_type, params_dir=params_dir)
-        elif player_type == 'black':
-            moves, probs = predict_move.predict_cnn(board_state, output=output_type, params_dir=params_dir)
+        # Assumes both AI are the same CNN model.
+        moves, probs = predict_move.predict_cnn(board_state, output=output_type, params_dir=params_dir)
 
         for i in range(1, 11):
             ind = np.argwhere(moves == i)[0]
@@ -176,7 +178,7 @@ class Board(object):
 
 def play():
 
-    # Alpha-numeric encoding of player turn: NN = 1, CNN = -1
+    # Alpha-numeric encoding of player turn: AI1 = 1, AI2 = -1
     turn = 1
 
     # Count number of invalid move attempts
@@ -192,7 +194,7 @@ def play():
     print('CNN Checkers Engine')
     print('Created by Chris Larson')
     print('\n')
-    print('NN is playing white, CNN is playing black.')
+    print('AI1 is playing white, AI2 is playing black.')
     print('There is no GUI for this game. Feel free to run an external program in 2-player mode alongside this game.')
     print('\n')
 
@@ -208,7 +210,7 @@ def play():
             player_type = 'white'
             print('Move %d: %s' % (move_count, player_type))
             board.print_board()
-            params_dir = 'parameters/nnet_150k_full/model.ckpt-150001'
+            params_dir = AI1_PARAMS
 
         # Black turn
         else:
@@ -217,7 +219,7 @@ def play():
             player_type = 'black'
             print('Move %d: %s' % (move_count, player_type))
             board.print_board()
-            params_dir = 'parameters/convnet_150k_full/model.ckpt-150001'
+            params_dir = AI2_PARAMS
 
         # Call model to generate move
         moves_list, probs = board.generate_move(player_type=player_type, output_type='top-10', params_dir=params_dir)
