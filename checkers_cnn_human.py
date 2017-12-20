@@ -10,167 +10,11 @@ trained using train_v6.py. The model parameters are stored in a checkpoint folde
 
 import numpy as np
 import pandas as pd
-import predict_move
+
+import checkers
 
 
-class Board(object):
-
-    global jumps, empty, odd_list
-
-    def __init__(self):
-        self.state = pd.read_csv(filepath_or_buffer='board_init.csv', header=-1, index_col=None)
-        self.invalid_attempts = 0
-
-    def board_state(self, player_type):
-        if player_type == 'white':
-            return -self.state.iloc[::-1, ::-1]
-        elif player_type == 'black':
-            return self.state
-
-    def print_board(self):
-
-        print('  32  31  30  29')
-        print('28  27  26  25')
-        print('  24  23  22  21')
-        print('20  19  18  17')
-        print('  16  15  14  13')
-        print('12  11  10  09')
-        print('  08  07  06  05')
-        print('04  03  02  01')
-        print('\n')
-        for j in range(8):
-            for i in range(4):
-                if j % 2 == 0:
-                    print(' ', end=' ')
-                if self.state[3 - i][7 - j] == 1:
-                    print('x', end=' ')
-                elif self.state[3 - i][7 - j] == 3:
-                    print('X', end=' ')
-                elif self.state[3 - i][7 - j] == 0:
-                    print('-', end=' ')
-                elif self.state[3 - i][7 - j] == -1:
-                    print('o', end=' ')
-                else:
-                    print('O', end=' ')
-                if j % 2 != 0:
-                    print(' ', end=' ')
-            print('')
-
-    def find_jumps(self, player_type):
-
-        valid_jumps = list()
-
-        if player_type == 'black':
-            king_value = black_king
-            chkr_value = black_chkr
-            chkr_directions = [1, 2]
-        else:
-            king_value = white_king
-            chkr_value = white_chkr
-            chkr_directions = [0, 3]
-
-        board_state = self.state.as_matrix()
-        board_state = np.reshape(board_state, (32,))
-
-        for position in range(32):
-            piece = board_state[position]
-            neighbors_list = neighbors[position]
-            next_neighbors_list = next_neighbors[position]
-
-            if piece == chkr_value:
-                for direction in chkr_directions:
-                    neighbor = neighbors_list[direction]
-                    next_neighbor = next_neighbors_list[direction]
-                    if neighbor == iv or next_neighbor == iv:
-                        pass
-                    elif board_state[next_neighbor] == empty and (board_state[neighbor] == -chkr_value or board_state[neighbor] == -king_value):
-                        valid_jumps.append([position, next_neighbor])
-
-            elif piece == king_value:
-                for direction in range(4):
-                    neighbor = neighbors_list[direction]
-                    next_neighbor = next_neighbors_list[direction]
-                    if neighbor == iv or next_neighbor == iv:
-                        pass
-                    elif board_state[next_neighbor] == empty and (board_state[neighbor] == -chkr_value or board_state[neighbor] == -king_value):
-                        valid_jumps.append([position, next_neighbor])
-
-        return valid_jumps
-
-    def get_positions(self, move, player_type):
-
-        # Extract starting position, and direction to move
-        ind = np.argwhere(move == 1)[0]
-        position = ind[0]
-        direction = ind[1]
-
-        jumps_available = self.find_jumps(player_type=player_type)
-
-        neighbor = neighbors[position][direction]
-        next_neighbor = next_neighbors[position][direction]
-
-        if [position, next_neighbor] in jumps_available:
-            return position, next_neighbor, 'jump'
-        else:
-            return position, neighbor, 'standard'
-
-    def generate_move(self, player_type, output_type):
-
-        board_state = self.state
-        moves, probs = predict_move.predict_cnn(board_state, output=output_type, params_dir=params_dir)
-        moves_list = list()
-
-        for i in range(1, 6):
-            ind = np.argwhere(moves == i)[0]
-            move = np.zeros([32, 4])
-            move[ind[0], ind[1]] = 1
-            pos_init, pos_final, move_type = self.get_positions(move, player_type=player_type)
-            moves_list.append([pos_init, pos_final])
-
-        return moves_list, probs
-
-    def update(self, positions, player_type, move_type):
-
-        # Extract the initial and final positions into ints
-        [pos_init, pos_final] = positions[0], positions[1]
-
-        if player_type == 'black':
-            king_pos = black_king_pos
-            king_value = black_king
-            chkr_value = black_chkr
-            pos_init, pos_final = int(pos_init), int(pos_final)
-        else:
-            king_pos = white_king_pos
-            king_value = white_king
-            chkr_value = white_chkr
-            pos_init, pos_final = int(pos_init) - 1, int(pos_final) - 1
-
-        # print(pos_init, pos_final)
-        board_vec = self.state.copy()
-        board_vec = np.reshape(board_vec.as_matrix(), (32,))
-
-        if (board_vec[pos_init] == chkr_value or board_vec[pos_init] == king_value) and board_vec[pos_final] == empty:
-            board_vec[pos_final] = board_vec[pos_init]
-            board_vec[pos_init] = empty
-
-            # Assign kings
-            if pos_final in king_pos:
-                board_vec[pos_final] = king_value
-
-            # Remove eliminated pieces
-            if move_type == 'jump':
-                eliminated = int(jumps.iloc[pos_init, pos_final])
-                print('Position eliminated: %d' % (eliminated + 1))
-                assert board_vec[eliminated] == -chkr_value or -king_value
-                board_vec[eliminated] = empty
-
-            # Update the board
-            board_vec = pd.DataFrame(np.reshape(board_vec, (8, 4)))
-            self.state = board_vec
-            return False
-
-        else:
-            return True
+AI_PARAMS = 'parameters/convnet_150k_full/model.ckpt-150001'
 
 
 def play():
@@ -185,7 +29,7 @@ def play():
     game_aborted = False
 
     # Initialize board object
-    board = Board()
+    board = checkers.Board()
 
     print('====================================================================================================================================================')
     print('CNN Checkers Engine')
@@ -215,6 +59,14 @@ def play():
             print('\n' * 2)
             print('=======================================================')
             print("White's turn")
+            print('  32  31  30  29')
+            print('28  27  26  25')
+            print('  24  23  22  21')
+            print('20  19  18  17')
+            print('  16  15  14  13')
+            print('12  11  10  09')
+            print('  08  07  06  05')
+            print('04  03  02  01')
             board.print_board()
             move_illegal = True
             while move_illegal:
@@ -243,7 +95,8 @@ def play():
                         else:
                             move_type = 'standard'
 
-                        move_illegal = board.update(positions=[pos_init, pos_final], player_type='white', move_type=move_type)
+                        # Human positions index from 1, but update excepts an index from 0..
+                        move_illegal = board.update(positions=[pos_init-1, pos_final-1], player_type='white', move_type=move_type)
                         if move_illegal:
                             print('That move is invalid, please try again.')
                         else:
@@ -258,7 +111,7 @@ def play():
             player_type = 'black'
 
             # Call model to generate move
-            moves_list, probs = board.generate_move(player_type=player_type, output_type='top-5')
+            moves_list, probs = board.generate_move(player_type=player_type, output_type='top-10', params_dir=AI_PARAMS)
             print(np.array(moves_list) + 1)
             print(probs)
 
@@ -410,88 +263,4 @@ def play():
 
 
 if __name__ == '__main__':
-    # Define board entries and valid positions
-    empty = 0
-    black_chkr = 1
-    black_king = 3
-    black_king_pos = [28, 29, 30, 31]
-    white_chkr = -black_chkr
-    white_king = -black_king
-    white_king_pos = [0, 1, 2, 3]
-    valid_positions = list(range(32))
-    odd_list = [0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27]
-    even_list = [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
-    jumps = pd.read_csv(filepath_or_buffer='jumps.csv', header=-1, index_col=None)
-    params_dir = 'parameters/convnet_150k_full/model.ckpt-150001'
-
-    # Entries for neighbors are lists, with indices corresponding to direction as defined in parser_v7.py ...
-    iv = ''
-    neighbors = {0: [iv, 5, 4, iv],
-                 1: [iv, 6, 5, iv],
-                 2: [iv, 7, 6, iv],
-                 3: [iv, iv, 7, iv],
-                 4: [0, 8, iv, iv],
-                 5: [1, 9, 8, 0],
-                 6: [2, 10, 9, 1],
-                 7: [3, 11, 10, 2],
-                 8: [5, 13, 12, 4],
-                 9: [6, 14, 13, 5],
-                 10: [7, 15, 14, 6],
-                 11: [iv, iv, 15, 7],
-                 12: [8, 16, iv, iv],
-                 13: [9, 17, 16, 8],
-                 14: [10, 18, 17, 9],
-                 15: [11, 19, 18, 10],
-                 16: [13, 21, 20, 12],
-                 17: [14, 22, 21, 13],
-                 18: [15, 23, 22, 14],
-                 19: [iv, iv, 23, 15],
-                 20: [16, 24, iv, iv],
-                 21: [17, 25, 24, 16],
-                 22: [18, 26, 25, 17],
-                 23: [19, 27, 26, 18],
-                 24: [21, 29, 28, 20],
-                 25: [22, 30, 29, 21],
-                 26: [23, 31, 30, 22],
-                 27: [iv, iv, 31, 23],
-                 28: [24, iv, iv, iv],
-                 29: [25, iv, iv, 24],
-                 30: [26, iv, iv, 25],
-                 31: [27, iv, iv, 26]
-                 }
-
-    next_neighbors = {0: [iv, 9, iv, iv],
-                      1: [iv, 10, 8, iv],
-                      2: [iv, 11, 9, iv],
-                      3: [iv, iv, 10, iv],
-                      4: [iv, 13, iv, iv],
-                      5: [iv, 14, 12, iv],
-                      6: [iv, 15, 13, iv],
-                      7: [iv, iv, 14, iv],
-                      8: [1, 17, iv, iv],
-                      9: [2, 18, 16, 0],
-                      10: [3, 19, 17, 1],
-                      11: [iv, iv, 18, 2],
-                      12: [5, 21, iv, iv],
-                      13: [6, 22, 20, 4],
-                      14: [7, 23, 21, 5],
-                      15: [iv, iv, 22, 6],
-                      16: [9, 25, iv, iv],
-                      17: [10, 26, 24, 8],
-                      18: [11, 27, 25, 9],
-                      19: [iv, iv, 26, 10],
-                      20: [13, 29, iv, iv],
-                      21: [14, 30, 28, 12],
-                      22: [15, 31, 29, 13],
-                      23: [iv, iv, 30, 14],
-                      24: [17, iv, iv, iv],
-                      25: [18, iv, iv, 16],
-                      26: [19, iv, iv, 17],
-                      27: [iv, iv, iv, 18],
-                      28: [21, iv, iv, iv],
-                      29: [22, iv, iv, 20],
-                      30: [23, iv, iv, 21],
-                      31: [iv, iv, iv, 22]
-                      }
-
     play()
