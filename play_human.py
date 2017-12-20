@@ -16,14 +16,14 @@ def ai_move(board):
 
 def human_move(board):
     print('\n')
-    print('  32  31  30  29')
-    print('28  27  26  25')
-    print('  24  23  22  21')
-    print('20  19  18  17')
-    print('  16  15  14  13')
-    print('12  11  10  09')
-    print('  08  07  06  05')
-    print('04  03  02  01')
+    print('  31  30  29  28')
+    print('27  26  25  24')
+    print('  23  22  21  20')
+    print('19  18  17  16')
+    print('  15  14  13  12')
+    print('11  10  09  08')
+    print('  07  06  05  04')
+    print('03  02  01  00')
 
     move_illegal = True
     while move_illegal:
@@ -51,8 +51,7 @@ def human_move(board):
                 else:
                     move_type = 'standard'
 
-                # Human positions index from 1, but update excepts an index from 0..
-                move_illegal = board.update(positions=[pos_init-1, pos_final-1], player_type='white', move_type=move_type)
+                move_illegal = board.update(positions=[pos_init, pos_final], player_type='white', move_type=move_type)
                 if move_illegal:
                     print('That move is invalid, please try again.')
                 else:
