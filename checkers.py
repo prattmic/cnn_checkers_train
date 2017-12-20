@@ -1,6 +1,7 @@
 # Original author: Chris Larson
 # All Rights Reserved (2016)
 
+
 import numpy as np
 import pandas as pd
 
@@ -94,9 +95,12 @@ import predict_move
 #  0  0  0  0
 
 
+# Invalid neighbor
+INVALID = ''
+
 # Entries for neighbors are lists, with indices corresponding to direction as
 # defined above.
-iv = ''
+iv = INVALID  # shorthand
 NEIGHBORS = {
     0: [iv, 5, 4, iv],
     1: [iv, 6, 5, iv],
@@ -241,7 +245,7 @@ class Board(object):
                 for direction in chkr_directions:
                     neighbor = neighbors_list[direction]
                     next_neighbor = next_neighbors_list[direction]
-                    if neighbor == iv or next_neighbor == iv:
+                    if neighbor == INVALID or next_neighbor == INVALID:
                         pass
                     elif board_state[next_neighbor] == EMPTY and (board_state[neighbor] == -chkr_value or board_state[neighbor] == -king_value):
                         valid_jumps.append([position, next_neighbor])
@@ -250,7 +254,7 @@ class Board(object):
                 for direction in range(4):
                     neighbor = neighbors_list[direction]
                     next_neighbor = next_neighbors_list[direction]
-                    if neighbor == iv or next_neighbor == iv:
+                    if neighbor == INVALID or next_neighbor == INVALID:
                         pass
                     elif board_state[next_neighbor] == EMPTY and (board_state[neighbor] == -chkr_value or board_state[neighbor] == -king_value):
                         valid_jumps.append([position, next_neighbor])
