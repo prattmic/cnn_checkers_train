@@ -81,6 +81,7 @@ def predict_nn(board, output, params_dir):
     return np.reshape(y, (label_height, label_width)).astype(int), probs
 
 
+# TODO(prattmic): Don't recreate the session and graph each time.
 def predict_cnn(board, output, params_dir):
 
     n = 1
@@ -169,5 +170,7 @@ def predict_cnn(board, output, params_dir):
             y[i, :] = 0
             for j in range(1, 51):
                 y[i, ind[j - 1]] = j
+
+    session.close()
 
     return np.reshape(y, (label_height, label_width)).astype(int), probs
