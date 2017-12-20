@@ -182,6 +182,9 @@ class Board(object):
         self.state = pd.read_csv(filepath_or_buffer='board_init.csv', header=-1, index_col=None)
         self.invalid_attempts = 0
 
+        self.jumps_not_predicted = 0
+        self.invalid_move_attempts = 0
+
         # Constant, just in Board to avoid read_csv in global scope.
         self.JUMPS = pd.read_csv(filepath_or_buffer='jumps.csv', header=-1, index_col=None)
 
@@ -335,3 +338,135 @@ class Board(object):
 
         else:
             return True
+
+    def move_ai(self, player_type, params_dir):
+        """Automatically complete a move as the AI.
+
+        Returns True if a move was made successfully, False to abort the game.
+        """
+        # Call model to generate move
+        moves_list, probs = self.generate_move(player_type=player_type, output_type='top-10', params_dir=params_dir)
+        print(np.array(moves_list) + 1)
+        print(probs)
+
+        # Check for available jumps, cross check with moves
+        available_jumps = self.find_jumps(player_type=player_type)
+
+        first_move = True
+
+        # Handles situation in which jump is available
+        if len(available_jumps) > 0:
+
+            move_type = 'jump'
+            jump_available = True
+
+            while jump_available:
+
+                # For one jump available
+                if len(available_jumps) == 1:
+                    count = 1
+                    move_predicted = False
+
+                    for move in moves_list:
+                        if move == available_jumps[0]:
+                            print("There is one jump available. This move was choice %d." % count)
+                            move_predicted = True
+                            break
+                        else:
+                            count += 1
+
+                    if not move_predicted:
+                        print('Model did not output the available jumps. Forced move.')
+                        self.jumps_not_predicted += 1
+
+                    initial_position = available_jumps[0][0]
+                    if not (first_move or final_position == initial_position):
+                        break
+                    final_position = available_jumps[0][1]
+                    initial_piece = np.reshape(self.state.as_matrix(), (32,))[initial_position]
+                    move_illegal = self.update(available_jumps[0], player_type=player_type, move_type=move_type)
+
+                    if move_illegal:
+                        print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[0]) + 1))
+                        return False
+                    else:
+                        print("%s move: %s" % (player_type, (np.array(available_jumps[0]) + 1)))
+                        available_jumps = self.find_jumps(player_type=player_type)
+                        final_piece = np.reshape(self.state.as_matrix(), (32,))[final_position]
+                        if len(available_jumps) == 0 or final_piece != initial_piece:
+                            jump_available = False
+
+                # When diffent multiple jumps are available
+                else:
+                    move_predicted = False
+                    for move in moves_list:
+                        if move in available_jumps:
+
+                            initial_position = move[0]
+                            if not (first_move or final_position == initial_position):
+                                break
+                            final_position = move[1]
+                            initial_piece = np.reshape(self.state.as_matrix(), (32,))[initial_position]
+                            move_illegal = self.update(move, player_type=player_type, move_type=move_type)
+
+                            if move_illegal:
+                                print('Model and Find jumps function predicted an invalid move: %s' % (np.array(move) + 1))
+                            else:
+                                print("%s move: %s" % (player_type, (np.array(move) + 1)))
+                                move_predicted = True
+                                available_jumps = self.find_jumps(player_type=player_type)
+                                final_piece = np.reshape(self.state.as_matrix(), (32,))[final_position]
+                                if len(available_jumps) == 0 or final_piece != initial_piece:
+                                    jump_available = False
+                                break
+
+                    if not move_predicted:
+                        print('Model did not output any of the available jumps. Move picked randomly among valid options.')
+                        self.jumps_not_predicted += 1
+                        ind = np.random.randint(0, len(available_jumps))
+
+                        initial_position = available_jumps[ind][0]
+                        if not (first_move or final_position == initial_position):
+                            break
+                        final_position = available_jumps[ind][1]
+                        initial_piece = np.reshape(self.state.as_matrix(), (32,))[initial_position]
+                        move_illegal = self.update(available_jumps[ind], player_type=player_type, move_type=move_type)
+
+                        if move_illegal:
+                            print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[ind]) + 1))
+                            return False
+                        else:
+                            available_jumps = self.find_jumps(player_type=player_type)
+                            final_piece = np.reshape(self.state.as_matrix(), (32,))[final_position]
+                            if len(available_jumps) == 0 or final_piece != initial_piece:
+                                jump_available = False
+
+                first_move = False
+
+        # For standard moves
+        else:
+            move_type = 'standard'
+            move_illegal = True
+            while move_illegal:
+
+                count = 1
+                for move in moves_list:
+
+                    move_illegal = self.update(move, player_type=player_type, move_type=move_type)
+
+                    if move_illegal:
+                        print('model predicted invalid move (%s)' % (np.array(move) + 1))
+                        print(probs[count - 1])
+                        self.invalid_move_attempts += 1
+                        count += 1
+                    else:
+                        print('%s move: %s' % (player_type, (np.array(move) + 1)))
+                        break
+
+                if move_illegal:
+                    print("The model failed to provide a valid move. Game aborted.")
+                    print(np.array(moves_list) + 1)
+                    print(probs)
+                    return False
+
+        return True
