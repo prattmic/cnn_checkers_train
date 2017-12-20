@@ -20,7 +20,7 @@ AI2_PARAMS = 'parameters/sample_training/model.ckpt-10001'
 def play():
 
     # Alpha-numeric encoding of player turn: AI1 = 1, AI2 = -1
-    turn = 1
+    turn = -1
 
     # Count number of invalid move attempts
     invalid_move_attempts = 0
