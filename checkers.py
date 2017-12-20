@@ -470,3 +470,85 @@ class Board(object):
                     return False
 
         return True
+
+def play(player1_move, player2_move):
+    """Play a full game of checkers.
+
+    player1_move and player2_move are functions that perform a move for that
+    player. They are passed the board and should update the board with their
+    move then return True. If they return False the game is aborted.
+    """
+
+    # Alpha-numeric encoding of player turn: Player 1 = 1, Player 2 = -1
+    turn = -1
+
+    move_count = 1
+
+    # Initialize board object
+    board = Board()
+
+    print('Player 1 is playing white, Player 2 is playing black.')
+    print('There is no GUI for this game. Feel free to run an external program in 2-player mode alongside this game.')
+    print('\n')
+
+    # Start game
+    input("To begin, press Enter:")
+
+    while True:
+
+        print('\n' * 2)
+        print('=======================================================')
+
+        abort = False
+
+        # White turn
+        if turn == 1:
+            print('Move %d: white' % move_count)
+            board.print_board()
+            abort = not player1_move(board)
+
+        # Black turn
+        else:
+            print('Move %d: black' % move_count)
+            board.print_board()
+            abort = not player2_move(board)
+
+        # Check game status
+        num_black_pieces = len(np.argwhere(board.state.as_matrix() > 0))
+        num_white_pieces = len(np.argwhere(board.state.as_matrix() < 0))
+
+        if num_black_pieces == 0:
+            winner = 'white'
+            break
+        elif num_white_pieces == 0:
+            winner = 'black'
+            break
+        elif move_count >= 100:
+            winner = 'draw'
+            break
+        elif abort:
+            winner = 'n/a'
+            break
+
+        move_count += 1
+        turn *= -1
+
+    # Print out game stats
+    end_board = board.state.as_matrix()
+    print('Ending board:')
+    print(board.board_state(player_type='white'))
+    num_black_chkr = len(np.argwhere(end_board == BLACK_CHECKER))
+    num_black_king = len(np.argwhere(end_board == BLACK_KING))
+    num_white_chkr = len(np.argwhere(end_board == WHITE_CHECKER))
+    num_white_king = len(np.argwhere(end_board == WHITE_KING))
+
+    if winner == 'draw':
+        print('The game ended in a draw.')
+    else:
+        print('%s wins' % winner)
+
+    print('Total number of moves: %d' % move_count)
+    print('Remaining white pieces: (checkers: %d, kings: %d)' % (num_white_chkr, num_white_king))
+    print('Remaining black pieces: (checkers: %d, kings: %d)' % (num_black_chkr, num_black_king))
+    print('Invalid move attempts: %d' % board.invalid_move_attempts)
+    print('Jumps not predicted: %d' % board.jumps_not_predicted)
