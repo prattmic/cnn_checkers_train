@@ -25,7 +25,7 @@ def play():
     # Count number of invalid move attempts
     invalid_move_attempts = 0
     jumps_not_predicted = 0
-    move_count = 0
+    move_count = 1
     game_aborted = False
 
     # Initialize board object
