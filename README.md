@@ -2,4 +2,4 @@
 
 To play against a pre-trained model:
 
-    $ python checkers_cnn_human.py
+    $ python play_human.py
