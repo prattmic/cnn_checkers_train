@@ -1,12 +1,5 @@
-# Title: checkers_v6.py
-# Author: Chris Larson
-# CS-6700 Final Project
+# Original author: Chris Larson
 # All Rights Reserved (2016)
-
-"""This is a checkers engine that generates moves using a convolutional neural network that has been trained
-on ~23k masters level checkers games that were recorded from checkers competitions that took place in the 1800 & 1900's.
-These games are contained in the text file 'OCA_2.0.pdn', and were parsed and encoded using parser_v7.py. The CNN is
-trained using train_v6.py. The model parameters are stored in a checkpoint folder located in the 'parameters' directory."""
 
 import numpy as np
 import pandas as pd

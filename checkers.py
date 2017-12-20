@@ -1,3 +1,6 @@
+# Original author: Chris Larson
+# All Rights Reserved (2016)
+
 import numpy as np
 import pandas as pd
 
