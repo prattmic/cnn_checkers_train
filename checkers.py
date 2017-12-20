@@ -353,7 +353,7 @@ class Board(object):
         """
         # Call model to generate move
         moves_list, probs = self.generate_move(player_type=player_type, output_type='top-10', params_dir=params_dir)
-        print(np.array(moves_list) + 1)
+        print(np.array(moves_list))
         print(probs)
 
         # Check for available jumps, cross check with moves
