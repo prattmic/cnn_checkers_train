@@ -74,7 +74,7 @@ import time
 
 
 TRAINING_SET = 'checkers_library_500.pickle'
-PARAM_DIR = 'parameters/sample_training/'
+PARAM_DIR = 'parameters/saved_model/'
 LOG_DIR = '/tmp/tensorflow'
 
 
@@ -92,7 +92,7 @@ def accuracy(preds, labs):
     return acc_score
 
 
-def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, ckpt_dir):
+def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir):
 
     # Computational graph
     graph = tf.Graph()
@@ -158,17 +158,12 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, ckpt_dir):
 
     # Feed data into the graph, run the model
     with tf.Session(graph=graph) as session:
-
-        var_dict = {'w1': w1,
-                    'b1': b1,
-                    'w2': w2,
-                    'b2': b2,
-                    'w3': w3,
-                    'b3': b3,
-                    'w4': w4,
-                    'b4': b4,
-                    }
-        saver = tf.train.Saver(var_dict)
+        def save_model(step):
+            path = os.path.join(model_dir, "step-%05d" % step)
+            builder = tf.saved_model.builder.SavedModelBuilder(path)
+            builder.add_meta_graph_and_variables(
+                    session, [tf.saved_model.tag_constants.SERVING])
+            builder.save()
 
         # Run model
         tf.initialize_all_variables().run()
@@ -208,14 +203,12 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, ckpt_dir):
                 print('Training accuracy of top 5 probabilities: %s' % acc_Tr)
                 print('Testing accuracy of top 5 probabilities: %s' % acc_Te)
                 print('Time consumed: %d minutes' % ((time.time() - t) / 60.))
-                saver.save(session, ckpt_dir + 'model.ckpt', global_step=step + 1)
+                save_model(step)
 
             elif step % 500 == 0:
                 print('Step %d complete ...' % step)
 
-            # if step == 10000:
-            #     break
-
+    save_model(num_steps)
     print('Training complete.')
 
 
@@ -281,4 +274,4 @@ if __name__ == '__main__':
             lambda_loss=0,
             dropout_L1=0,
             dropout_L2=0,
-            ckpt_dir=param_dir)
+            model_dir=param_dir)
