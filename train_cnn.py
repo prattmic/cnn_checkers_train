@@ -166,7 +166,7 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir):
             builder.save()
 
         # Run model
-        tf.initialize_all_variables().run()
+        tf.global_variables_initializer().run()
         print('Graph initialized ...')
 
         writer = tf.summary.FileWriter(LOG_DIR, session.graph)
