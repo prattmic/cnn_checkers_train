@@ -99,6 +99,9 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir, log_dir):
         tf_xTe = tf.constant(xTe)
         tf_xTr_full = tf.constant(xTr)
 
+        # Prediction input.
+        tf_xP = tf.placeholder(tf.float32, shape=[1, board_height, board_width, num_channels])
+
         # Variables
         w1 = tf.Variable(tf.truncated_normal([patch_size, patch_size, num_channels, depth], stddev=0.1), name='w1')
         b1 = tf.Variable(tf.zeros([depth]), name='b1')
@@ -151,13 +154,27 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir, log_dir):
         preds_Tr = tf.nn.softmax(model(tf_xTr_full, 0))
         preds_Te = tf.nn.softmax(model(tf_xTe, 0))
 
+        # Single prediction output.
+        tf_yP = tf.nn.softmax(model(tf_xP, 1))
+
     # Feed data into the graph, run the model
     with tf.Session(graph=graph) as session:
         def save_model(step):
             path = os.path.join(model_dir, "step-%05d" % step)
             builder = tf.saved_model.builder.SavedModelBuilder(path)
+
+            signature = tf.saved_model.signature_def_utils.build_signature_def(
+                    inputs = {'inputs': tf.saved_model.utils.build_tensor_info(tf_xP)},
+                    outputs = {'outputs': tf.saved_model.utils.build_tensor_info(tf_yP)},
+                    method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME)
+
             builder.add_meta_graph_and_variables(
-                    session, [tf.saved_model.tag_constants.SERVING])
+                    session, [tf.saved_model.tag_constants.SERVING],
+                    signature_def_map = {
+                        tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+                            signature,
+                    })
+
             builder.save()
 
         # Run model
@@ -203,7 +220,9 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir, log_dir):
             elif step % 500 == 0:
                 print('Step %d complete ...' % step)
 
-    save_model(num_steps)
+        # Save final model.
+        save_model(num_steps)
+
     print('Training complete.')
 
 
