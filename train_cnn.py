@@ -65,17 +65,14 @@
 #
 # end comments ====================================================================================
 
-import os
+import argparse
 import numpy as np
+import os
 import pandas as pd
 from six.moves import cPickle as pickle
+import tempfile
 import tensorflow as tf
 import time
-
-
-TRAINING_SET = 'checkers_library_500.pickle'
-PARAM_DIR = 'parameters/saved_model/'
-LOG_DIR = '/tmp/tensorflow'
 
 
 def accuracy(preds, labs):
@@ -92,12 +89,10 @@ def accuracy(preds, labs):
     return acc_score
 
 
-def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir):
-
+def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir, log_dir):
     # Computational graph
     graph = tf.Graph()
     with graph.as_default():
-
         # Inputs
         tf_xTr = tf.placeholder(tf.float32, shape=[batch_size, board_height, board_width, num_channels])
         tf_yTr = tf.placeholder(tf.float32, shape=[batch_size, label_height * label_width])
@@ -169,7 +164,7 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir):
         tf.global_variables_initializer().run()
         print('Graph initialized ...')
 
-        writer = tf.summary.FileWriter(LOG_DIR, session.graph)
+        writer = tf.summary.FileWriter(log_dir, session.graph)
         summaries = tf.summary.merge_all()
 
         t = time.time()
@@ -213,6 +208,25 @@ def deepnet(num_steps, lambda_loss, dropout_L1, dropout_L2, model_dir):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Train checks CNN')
+    parser.add_argument('--training-set', default='checkers_library_500.pickle',
+                        help='Pickled training data')
+    parser.add_argument('--model-dir', help='Model is saved to this directory')
+    parser.add_argument('--log-dir', default='/tmp/tensorflow',
+                        help='Tensorboard log directory')
+    parser.add_argument('--steps', default=150001, type=int,
+                        help='Number of training steps.')
+
+    args = parser.parse_args()
+
+    # Random model directory if none passed.
+    if not args.model_dir:
+        args.model_dir = tempfile.mkdtemp(prefix='model-')
+
+    print('Model directory: %s' % args.model_dir)
+    print('Log directory: %s' % args.log_dir)
+    print('Training set: %s' % args.training_set)
+    print('Training steps: %d' % args.steps)
 
     # Define batch size for SGD, and network architecture
     batch_size = 128
@@ -227,8 +241,7 @@ if __name__ == '__main__':
     label_width = 4
 
     # Extract training data into win_dict, loss_dict, and draw_dict
-    trainset_file = TRAINING_SET
-    p = pd.read_pickle(trainset_file)
+    p = pd.read_pickle(args.training_set)
     win_dict = p['win_library']
     loss_dict = p['loss_library']
     draw_dict = p['draw_library']
@@ -268,10 +281,9 @@ if __name__ == '__main__':
     xTr = np.reshape(xTr, (-1, board_height, board_width, num_channels))
     xTe = np.reshape(xTe, (-1, board_height, board_width, num_channels))
 
-    param_dir = PARAM_DIR
-
-    deepnet(num_steps=150001,
+    deepnet(num_steps=args.steps,
             lambda_loss=0,
             dropout_L1=0,
             dropout_L2=0,
-            model_dir=param_dir)
+            model_dir=args.model_dir,
+            log_dir=args.log_dir)
