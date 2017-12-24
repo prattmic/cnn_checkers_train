@@ -7,7 +7,7 @@ import pandas as pd
 import checkers
 
 
-AI_PARAMS = 'parameters/convnet_150k_full/model.ckpt-150001'
+AI_PARAMS = 'parameters/saved_model/step-01001'
 
 
 def ai_move(board):

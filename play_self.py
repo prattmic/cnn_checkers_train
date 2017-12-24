@@ -8,8 +8,8 @@ import pandas as pd
 import checkers
 
 
-AI1_PARAMS = 'parameters/convnet_150k_full/model.ckpt-150001'
-AI2_PARAMS = 'parameters/sample_training/model.ckpt-10001'
+AI1_PARAMS = 'parameters/saved_model/step-01001'
+AI2_PARAMS = 'parameters/saved_model/step-01001'
 
 
 def ai1_move(board):
