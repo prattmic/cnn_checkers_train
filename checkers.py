@@ -498,9 +498,6 @@ def play(player1_move, player2_move):
     print('There is no GUI for this game. Feel free to run an external program in 2-player mode alongside this game.')
     print('\n')
 
-    # Start game
-    input("To begin, press Enter:")
-
     while True:
 
         print('\n' * 2)
