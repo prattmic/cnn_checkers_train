@@ -278,13 +278,13 @@ class Board(object):
         else:
             return position, neighbor, 'standard'
 
-    def generate_move(self, player_type, output_type, params_dir):
+    def generate_move(self, player_type, output_type, predictor):
 
         board_state = self.board_state(player_type=player_type)
         moves_list = list()
 
         # Assumes both AI are the same CNN model.
-        moves, probs = predict_move.predict_cnn(board_state, output=output_type, params_dir=params_dir)
+        moves, probs = predict_move.predict_cnn(board_state, output=output_type, predictor=predictor)
 
         for i in range(1, 11):
             ind = np.argwhere(moves == i)[0]
@@ -346,13 +346,13 @@ class Board(object):
         else:
             return True
 
-    def move_ai(self, player_type, params_dir):
+    def move_ai(self, player_type, predictor):
         """Automatically complete a move as the AI.
 
         Returns True if a move was made successfully, False to abort the game.
         """
         # Call model to generate move
-        moves_list, probs = self.generate_move(player_type=player_type, output_type='top-10', params_dir=params_dir)
+        moves_list, probs = self.generate_move(player_type=player_type, output_type='top-10', predictor=predictor)
         print(np.array(moves_list))
         print(probs)
 

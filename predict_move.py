@@ -81,17 +81,13 @@ def predict_nn(board, output, params_dir):
     return np.reshape(y, (label_height, label_width)).astype(int), probs
 
 
-# TODO(prattmic): Don't recreate the predictor each time.
-def predict_cnn(board, output, params_dir):
+def predict_cnn(board, predictor, output):
     n = 1
     num_channels = 1
     board_height = 8
     board_width = 4
     label_height = 32
     label_width = 4
-
-    predictor = tf.contrib.predictor.from_saved_model(params_dir,
-            signature_def_key=tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
 
     # Predict
     board = np.reshape(board.as_matrix(), (n, board_height, board_width, num_channels))

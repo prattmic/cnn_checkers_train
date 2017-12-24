@@ -1,17 +1,19 @@
 # Original author: Chris Larson
 # All Rights Reserved (2016)
 
+import functools
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 import checkers
 
 
-AI_PARAMS = 'parameters/saved_model/step-01001'
+AI_MODEL = 'parameters/saved_model/step-01001'
 
 
-def ai_move(board):
-    return board.move_ai('black', AI_PARAMS)
+def ai_move(predictor, board):
+    return board.move_ai('black', predictor)
 
 
 def human_move(board):
@@ -61,6 +63,9 @@ def human_move(board):
 
 
 def play():
+    ai_predictor = tf.contrib.predictor.from_saved_model(AI_MODEL,
+            signature_def_key=tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
+
     print('====================================================================================================================================================')
     print('CNN Checkers Engine')
     print('Created by Chris Larson')
@@ -77,7 +82,7 @@ def play():
     print("3. To end the game, specify the result as follows: 'black wins' for a black win, 'white wins' for a white win, or 'draw' for a draw.")
     print('\n')
 
-    checkers.play(human_move, ai_move)
+    checkers.play(human_move, functools.partial(ai_move, ai_predictor))
 
 
 if __name__ == '__main__':
