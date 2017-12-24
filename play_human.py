@@ -1,15 +1,13 @@
 # Original author: Chris Larson
 # All Rights Reserved (2016)
 
+import argparse
 import functools
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 import checkers
-
-
-AI_MODEL = 'parameters/saved_model/step-01001'
 
 
 def ai_move(predictor, board):
@@ -62,8 +60,8 @@ def human_move(board):
     return True
 
 
-def play():
-    ai_predictor = tf.contrib.predictor.from_saved_model(AI_MODEL,
+def play(model):
+    ai_predictor = tf.contrib.predictor.from_saved_model(model,
             signature_def_key=tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
 
     print('====================================================================================================================================================')
@@ -86,4 +84,9 @@ def play():
 
 
 if __name__ == '__main__':
-    play()
+    parser = argparse.ArgumentParser(description='Checkers AI vs human')
+    parser.add_argument('model', metavar='MODEL_PATH', help='AI model path')
+
+    args = parser.parse_args()
+
+    play(args.model)

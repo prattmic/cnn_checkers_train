@@ -2,16 +2,13 @@
 # All Rights Reserved (2016)
 
 
+import argparse
 import functools
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 import checkers
-
-
-AI1_MODEL = 'parameters/saved_model/step-01001'
-AI2_MODEL = 'parameters/saved_model/step-01001'
 
 
 def ai1_move(predictor, board):
@@ -22,10 +19,10 @@ def ai2_move(predictor, board):
     return board.move_ai('black', predictor)
 
 
-def play():
-    ai1_predictor = tf.contrib.predictor.from_saved_model(AI1_MODEL,
+def play(model1, model2):
+    ai1_predictor = tf.contrib.predictor.from_saved_model(model1,
             signature_def_key=tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
-    ai2_predictor = tf.contrib.predictor.from_saved_model(AI2_MODEL,
+    ai2_predictor = tf.contrib.predictor.from_saved_model(model2,
             signature_def_key=tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
 
     print('====================================================================================================================================================')
@@ -42,4 +39,10 @@ def play():
 
 
 if __name__ == '__main__':
-    play()
+    parser = argparse.ArgumentParser(description='Checkers self-play')
+    parser.add_argument('model1', metavar='MODEL1_PATH', help='AI1 model path')
+    parser.add_argument('model2', metavar='MODEL2_PATH', help='AI2 model path')
+
+    args = parser.parse_args()
+
+    play(args.model1, args.model2)
