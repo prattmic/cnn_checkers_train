@@ -62,21 +62,21 @@ def deepnet():
         # Policy head.
         with tf.variable_scope("policy"):
             pc = tf.layers.conv2d(v, 2, kernel_size=1, padding='SAME')
-            pb = tf.layers.batch_normalization(c1, axis=3)
-            ph = tf.nn.relu(b1)
+            pb = tf.layers.batch_normalization(pc, axis=3)
+            ph = tf.nn.relu(pb)
 
             policy = tf.layers.dense(ph, BATCH_SIZE * BOARD_HEIGHT * BOARD_WIDTH * OUTPUT_PLANES)
 
         # Value head.
         with tf.variable_scope("value"):
             vc = tf.layers.conv2d(v, 1, kernel_size=1, padding='SAME')
-            vb = tf.layers.batch_normalization(c1, axis=3)
-            vh = tf.nn.relu(b1)
+            vb = tf.layers.batch_normalization(vc, axis=3)
+            vh = tf.nn.relu(vb)
 
             d1 = tf.layers.dense(vh, 256)
-            h1 = tf.nn.relu(d1)
+            hidden = tf.nn.relu(d1)
 
-            d2 = tf.layers.dense(vh, 1)
+            d2 = tf.layers.dense(hidden, 1)
             value = tf.nn.tanh(d2)
 
         return policy, value
