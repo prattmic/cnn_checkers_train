@@ -36,12 +36,6 @@ def deepnet():
     #        shape=[BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, OUTPUT_PLANES])
 
     def model(x1):
-        # Input convolution.
-        with tf.variable_scope("input"):
-            c1 = tf.layers.conv2d(x1, CONVOLUTION_CHANNELS, kernel_size=3, padding='SAME')
-            b1 = tf.layers.batch_normalization(c1, axis=3)
-            h1 = tf.nn.relu(b1)
-
         def residual_block(x1):
             c1 = tf.layers.conv2d(x1, CONVOLUTION_CHANNELS, kernel_size=3, padding='SAME')
             b1 = tf.layers.batch_normalization(c1, axis=3)
@@ -53,15 +47,41 @@ def deepnet():
 
             return h2
 
-        v = h1
+        # Input convolution.
+        with tf.variable_scope("input"):
+            c1 = tf.layers.conv2d(x1, CONVOLUTION_CHANNELS, kernel_size=3, padding='SAME')
+            b1 = tf.layers.batch_normalization(c1, axis=3)
+            h1 = tf.nn.relu(b1)
 
+        # Residual blocks.
+        v = h1
         for i in range(RESIDUAL_BLOCKS):
             with tf.variable_scope("residual_block%d" % i):
                 v = residual_block(v)
 
-        return v
+        # Policy head.
+        with tf.variable_scope("policy"):
+            pc = tf.layers.conv2d(v, 2, kernel_size=1, padding='SAME')
+            pb = tf.layers.batch_normalization(c1, axis=3)
+            ph = tf.nn.relu(b1)
 
-    y = model(x)
+            policy = tf.layers.dense(ph, BATCH_SIZE * BOARD_HEIGHT * BOARD_WIDTH * OUTPUT_PLANES)
+
+        # Value head.
+        with tf.variable_scope("value"):
+            vc = tf.layers.conv2d(v, 1, kernel_size=1, padding='SAME')
+            vb = tf.layers.batch_normalization(c1, axis=3)
+            vh = tf.nn.relu(b1)
+
+            d1 = tf.layers.dense(vh, 256)
+            h1 = tf.nn.relu(d1)
+
+            d2 = tf.layers.dense(vh, 1)
+            value = tf.nn.tanh(d2)
+
+        return policy, value
+
+    policy, value = model(x)
 
     with tf.Session() as session:
         tf.global_variables_initializer().run()
@@ -71,9 +91,10 @@ def deepnet():
         xin = np.ones([BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, INPUT_CHANNELS])
         print("input: %s" % xin)
 
-        yout = session.run([y], feed_dict={x: xin})
-        print("output: %s" % yout)
-        print("shape: %s" % (yout[0].shape,))
+        out = session.run([policy, value], feed_dict={x: xin})
+        print("output: %s" % out)
+        print("shape: %s" % (out[0].shape,))
+        print("shape: %s" % (out[1].shape,))
 
 
 if __name__ == "__main__":
