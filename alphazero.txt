@@ -1,0 +1,36 @@
+Input features
+
+Feature         Planes
+----------------------
+P1 pieces       2 (normal and king)
+P2 pieces       2
+Color           1 (color of player to make a move)
+
+T = 8 step history for the all features.
+
+8 x 4 x (8 x 2 + 8 x 2 + 8 x 1) = 32 x 24 = 768
+
+
+Double jumps are handled by offering the player another move after a jump. They
+may jump again or pass if no jump is available. This means we need player color
+in the history.
+
+N.B. "If a man jumps into the kings row, the current move terminates; the piece
+is crowned as a king but cannot jump back out as in a multi-jump, until the
+next move."
+
+
+Output features
+
+Feature         Planes
+----------------------
+Move direction  4
+Pass            1
+
+8 x 4 x (4 + 1) = 32 x 5 = 160
+
+Move direction may be set for each source square. Jumps occur automatically in
+that direction.
+
+Pass skips the turn without moving. This is only valid after a jump if no
+double-jump is available.
