@@ -23,6 +23,8 @@ CONVOLUTION_CHANNELS = 256
 
 RESIDUAL_BLOCKS = 6
 
+LOG_DIR = "/tmp/tensorflow"
+
 
 def deepnet():
     # Input
@@ -63,6 +65,8 @@ def deepnet():
 
     with tf.Session() as session:
         tf.global_variables_initializer().run()
+
+        writer = tf.summary.FileWriter(LOG_DIR, session.graph)
 
         xin = np.ones([BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, INPUT_CHANNELS])
         print("input: %s" % xin)
