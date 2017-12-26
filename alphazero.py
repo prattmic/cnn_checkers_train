@@ -21,6 +21,8 @@ OUTPUT_PLANES = 5
 
 CONVOLUTION_CHANNELS = 256
 
+RESIDUAL_BLOCKS = 6
+
 
 def deepnet():
     # Input
@@ -31,20 +33,38 @@ def deepnet():
     #y = tf.placeholder(tf.float32,
     #        shape=[BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, OUTPUT_PLANES])
 
-    # Variables
-    w1 = tf.Variable(tf.truncated_normal([2, 2, INPUT_CHANNELS, CONVOLUTION_CHANNELS], stddev=0.1), name='w1')
+    def model(x1):
+        # Input convolution.
+        with tf.variable_scope("input"):
+            c1 = tf.layers.conv2d(x1, CONVOLUTION_CHANNELS, kernel_size=3, padding='SAME')
+            b1 = tf.layers.batch_normalization(c1, axis=3)
+            h1 = tf.nn.relu(b1)
 
-    def model(xtrain):
-        c1 = tf.nn.conv2d(xtrain, w1, strides=[1, 1, 1, 1], padding='SAME')
+        def residual_block(x1):
+            c1 = tf.layers.conv2d(x1, CONVOLUTION_CHANNELS, kernel_size=3, padding='SAME')
+            b1 = tf.layers.batch_normalization(c1, axis=3)
+            h1 = tf.nn.relu(b1)
 
-        return c1
+            c2 = tf.layers.conv2d(h1, CONVOLUTION_CHANNELS, kernel_size=3, padding='SAME')
+            b2 = tf.layers.batch_normalization(c2, axis=3)
+            h2 = tf.nn.relu(b2 + x1)
+
+            return h2
+
+        v = h1
+
+        for i in range(RESIDUAL_BLOCKS):
+            with tf.variable_scope("residual_block%d" % i):
+                v = residual_block(v)
+
+        return v
 
     y = model(x)
 
     with tf.Session() as session:
         tf.global_variables_initializer().run()
 
-        xin = np.random.rand(BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, INPUT_CHANNELS)
+        xin = np.ones([BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, INPUT_CHANNELS])
         print("input: %s" % xin)
 
         yout = session.run([y], feed_dict={x: xin})
