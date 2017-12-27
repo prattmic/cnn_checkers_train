@@ -2,6 +2,10 @@ import numpy as np
 import tensorflow as tf
 
 
+# See the AlphaGo Zero and AlphaZero papers:
+# "Mastering the game of Go without human knowledge"
+# "Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm"
+
 BATCH_SIZE = 1
 
 BOARD_HEIGHT = 8
@@ -30,10 +34,6 @@ def deepnet():
     # Input
     x = tf.placeholder(tf.float32,
             shape=[BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, INPUT_CHANNELS])
-
-    # Output
-    #y = tf.placeholder(tf.float32,
-    #        shape=[BATCH_SIZE, BOARD_HEIGHT, BOARD_WIDTH, OUTPUT_PLANES])
 
     def model(x1):
         def residual_block(x1):
