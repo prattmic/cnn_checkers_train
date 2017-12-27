@@ -76,7 +76,8 @@ def deepnet():
             d1 = tf.layers.dense(vh, 256)
             hidden = tf.nn.relu(d1)
 
-            d2 = tf.layers.dense(hidden, 1)
+            flat = tf.contrib.layers.flatten(hidden)
+            d2 = tf.layers.dense(flat, 1)
             value = tf.nn.tanh(d2)
 
         return policy, value
