@@ -65,7 +65,7 @@ def deepnet():
             pb = tf.layers.batch_normalization(pc, axis=3)
             ph = tf.nn.relu(pb)
 
-            policy = tf.layers.dense(ph, BATCH_SIZE * BOARD_HEIGHT * BOARD_WIDTH * OUTPUT_PLANES)
+            policy = tf.layers.dense(ph, OUTPUT_PLANES)
 
         # Value head.
         with tf.variable_scope("value"):
@@ -93,8 +93,8 @@ def deepnet():
 
         out = session.run([policy, value], feed_dict={x: xin})
         print("output: %s" % out)
-        print("shape: %s" % (out[0].shape,))
-        print("shape: %s" % (out[1].shape,))
+        print("policy shape: %s" % (out[0].shape,))
+        print("value shape: %s" % (out[1].shape,))
 
 
 if __name__ == "__main__":
