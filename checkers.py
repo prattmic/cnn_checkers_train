@@ -187,7 +187,6 @@ class Board(object):
 
     def __init__(self):
         self.state = pd.read_csv(filepath_or_buffer='board_init.csv', header=-1, index_col=None)
-        self.invalid_attempts = 0
 
         self.jumps_not_predicted = 0
         self.invalid_move_attempts = 0
