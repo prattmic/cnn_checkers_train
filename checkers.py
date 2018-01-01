@@ -3,7 +3,6 @@
 
 
 import numpy as np
-import pandas as pd
 
 import predict_move
 
@@ -268,36 +267,68 @@ def build_jumps():
 # JUMPS[from, to] returns the position jumped over.
 JUMPS = build_jumps()
 
+
+def build_init():
+    b = BLACK_CHECKER
+    w = WHITE_CHECKER
+    e = EMPTY
+
+    a = np.array([
+        [b, b, b, b],
+        [b, b, b, b],
+        [b, b, b, b],
+        [e, e, e, e],
+        [e, e, e, e],
+        [w, w, w, w],
+        [w, w, w, w],
+        [w, w, w, w],
+    ])
+
+    a.flags.writeable = False
+
+    return a
+
+
+# Initial board state. Copy before modifying.
+BOARD_INIT = build_init()
+
+
 class Board(object):
 
     def __init__(self):
-        self.state = pd.read_csv(filepath_or_buffer='board_init.csv', header=-1, index_col=None)
+        self.state = BOARD_INIT.copy()
 
         self.jumps_not_predicted = 0
         self.invalid_move_attempts = 0
 
     def board_state(self, player_type):
         if player_type == 'white':
-            return -self.state.iloc[::-1, ::-1]
+            return -self.state[::-1, ::-1]
         elif player_type == 'black':
             return self.state
 
     def print_board(self):
-        for j in range(8):
-            for i in range(4):
-                if j % 2 == 0:
+        for i in range(8):
+            for j in range(4):
+                if i % 2 == 0:
                     print(' ', end=' ')
-                if self.state[3 - i][7 - j] == 1:
+
+                # We print the board 'upside down'. i.e., black/position 0 at
+                # the bottom.
+                v = self.state[7 - i, 3 - j]
+
+                if v == BLACK_CHECKER:
                     print('x', end=' ')
-                elif self.state[3 - i][7 - j] == 3:
+                elif v == BLACK_KING:
                     print('X', end=' ')
-                elif self.state[3 - i][7 - j] == 0:
+                elif v == EMPTY:
                     print('-', end=' ')
-                elif self.state[3 - i][7 - j] == -1:
+                elif v == WHITE_CHECKER:
                     print('o', end=' ')
                 else:
                     print('O', end=' ')
-                if j % 2 != 0:
+
+                if i % 2 != 0:
                     print(' ', end=' ')
             print('')
 
@@ -314,8 +345,7 @@ class Board(object):
             chkr_value = WHITE_CHECKER
             chkr_directions = [0, 3]
 
-        board_state = self.state.copy()
-        board_state = np.reshape(board_state.as_matrix(), (32,))
+        board_state = np.reshape(self.state, (32,))
 
         for position in range(32):
             piece = board_state[position]
@@ -401,8 +431,7 @@ class Board(object):
             chkr_value = WHITE_CHECKER
 
         # print(pos_init, pos_final)
-        board_vec = self.state.copy()
-        board_vec = np.reshape(board_vec.as_matrix(), (32,))
+        board_vec = np.reshape(self.state, (32,))
 
         if (board_vec[pos_init] == chkr_value or board_vec[pos_init] == king_value) and board_vec[pos_final] == EMPTY:
             board_vec[pos_final] = board_vec[pos_init]
@@ -421,8 +450,7 @@ class Board(object):
                 board_vec[eliminated] = EMPTY
 
             # Update the board
-            board_vec = pd.DataFrame(np.reshape(board_vec, (8, 4)))
-            self.state = board_vec
+            self.state = np.reshape(board_vec, (8, 4))
             return False
 
         else:
@@ -472,7 +500,7 @@ class Board(object):
                     if not (first_move or final_position == initial_position):
                         break
                     final_position = available_jumps[0][1]
-                    initial_piece = np.reshape(self.state.as_matrix(), (32,))[initial_position]
+                    initial_piece = np.reshape(self.state, (32,))[initial_position]
                     move_illegal = self.update(available_jumps[0], player_type=player_type, move_type=move_type)
 
                     if move_illegal:
@@ -481,7 +509,7 @@ class Board(object):
                     else:
                         print("%s move: %s" % (player_type, (np.array(available_jumps[0]) + 1)))
                         available_jumps = self.find_jumps(player_type=player_type)
-                        final_piece = np.reshape(self.state.as_matrix(), (32,))[final_position]
+                        final_piece = np.reshape(self.state, (32,))[final_position]
                         if len(available_jumps) == 0 or final_piece != initial_piece:
                             jump_available = False
 
@@ -495,7 +523,7 @@ class Board(object):
                             if not (first_move or final_position == initial_position):
                                 break
                             final_position = move[1]
-                            initial_piece = np.reshape(self.state.as_matrix(), (32,))[initial_position]
+                            initial_piece = np.reshape(self.state, (32,))[initial_position]
                             move_illegal = self.update(move, player_type=player_type, move_type=move_type)
 
                             if move_illegal:
@@ -504,7 +532,7 @@ class Board(object):
                                 print("%s move: %s" % (player_type, (np.array(move) + 1)))
                                 move_predicted = True
                                 available_jumps = self.find_jumps(player_type=player_type)
-                                final_piece = np.reshape(self.state.as_matrix(), (32,))[final_position]
+                                final_piece = np.reshape(self.state, (32,))[final_position]
                                 if len(available_jumps) == 0 or final_piece != initial_piece:
                                     jump_available = False
                                 break
@@ -518,7 +546,7 @@ class Board(object):
                         if not (first_move or final_position == initial_position):
                             break
                         final_position = available_jumps[ind][1]
-                        initial_piece = np.reshape(self.state.as_matrix(), (32,))[initial_position]
+                        initial_piece = np.reshape(self.state, (32,))[initial_position]
                         move_illegal = self.update(available_jumps[ind], player_type=player_type, move_type=move_type)
 
                         if move_illegal:
@@ -526,7 +554,7 @@ class Board(object):
                             return False
                         else:
                             available_jumps = self.find_jumps(player_type=player_type)
-                            final_piece = np.reshape(self.state.as_matrix(), (32,))[final_position]
+                            final_piece = np.reshape(self.state, (32,))[final_position]
                             if len(available_jumps) == 0 or final_piece != initial_piece:
                                 jump_available = False
 
@@ -600,8 +628,8 @@ def play(player1_move, player2_move):
             abort = not player2_move(board)
 
         # Check game status
-        num_black_pieces = len(np.argwhere(board.state.as_matrix() > 0))
-        num_white_pieces = len(np.argwhere(board.state.as_matrix() < 0))
+        num_black_pieces = len(np.argwhere(board.state > 0))
+        num_white_pieces = len(np.argwhere(board.state < 0))
 
         if num_black_pieces == 0:
             winner = 'white'
@@ -620,7 +648,7 @@ def play(player1_move, player2_move):
         turn *= -1
 
     # Print out game stats
-    end_board = board.state.as_matrix()
+    end_board = board.state
     print('Ending board:')
     print(board.board_state(player_type='white'))
     num_black_chkr = len(np.argwhere(end_board == BLACK_CHECKER))

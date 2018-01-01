@@ -90,7 +90,7 @@ def predict_cnn(board, predictor, output):
     label_width = 4
 
     # Predict
-    board = np.reshape(board.as_matrix(), (n, board_height, board_width, num_channels))
+    board = np.reshape(board, (n, board_height, board_width, num_channels))
     y = predictor({'inputs': board})['outputs']
     norm = np.sum(y)
 
