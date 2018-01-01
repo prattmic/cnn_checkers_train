@@ -183,6 +183,91 @@ WHITE_KING = -BLACK_KING
 BLACK_KING_POS = [28, 29, 30, 31]
 WHITE_KING_POS = [0, 1, 2, 3]
 
+
+def build_jumps():
+    """Creates the jump table."""
+    jumps = np.full((32, 32), -1)
+
+    # Valid jumps.
+    jumps[0, 9] = 5
+    jumps[1, 8] = 5
+    jumps[1, 10] = 6
+    jumps[2, 9] = 6
+    jumps[2, 11] = 7
+    jumps[3, 10] = 7
+    jumps[4, 13] = 8
+    jumps[5, 12] = 8
+    jumps[5, 14] = 9
+    jumps[6, 13] = 9
+    jumps[6, 15] = 10
+    jumps[7, 14] = 10
+    jumps[8, 1] = 5
+    jumps[8, 17] = 13
+    jumps[9, 0] = 5
+    jumps[9, 2] = 6
+    jumps[9, 16] = 13
+    jumps[9, 18] = 14
+    jumps[10, 1] = 6
+    jumps[10, 3] = 7
+    jumps[10, 17] = 14
+    jumps[10, 19] = 15
+    jumps[11, 2] = 7
+    jumps[11, 18] = 15
+    jumps[12, 5] = 8
+    jumps[12, 21] = 16
+    jumps[13, 4] = 8
+    jumps[13, 6] = 9
+    jumps[13, 20] = 16
+    jumps[13, 22] = 17
+    jumps[14, 5] = 9
+    jumps[14, 7] = 10
+    jumps[14, 21] = 17
+    jumps[14, 23] = 18
+    jumps[15, 6] = 10
+    jumps[15, 22] = 18
+    jumps[16, 9] = 13
+    jumps[16, 25] = 21
+    jumps[17, 8] = 13
+    jumps[17, 10] = 14
+    jumps[17, 24] = 21
+    jumps[17, 26] = 22
+    jumps[18, 9] = 14
+    jumps[18, 11] = 15
+    jumps[18, 25] = 22
+    jumps[18, 27] = 23
+    jumps[19, 10] = 15
+    jumps[19, 26] = 23
+    jumps[20, 13] = 16
+    jumps[20, 29] = 24
+    jumps[21, 12] = 16
+    jumps[21, 14] = 17
+    jumps[21, 28] = 24
+    jumps[21, 30] = 25
+    jumps[22, 13] = 17
+    jumps[22, 15] = 18
+    jumps[22, 29] = 25
+    jumps[22, 31] = 26
+    jumps[23, 14] = 18
+    jumps[23, 30] = 26
+    jumps[24, 17] = 21
+    jumps[25, 16] = 21
+    jumps[25, 18] = 22
+    jumps[26, 17] = 22
+    jumps[26, 19] = 23
+    jumps[27, 18] = 23
+    jumps[28, 21] = 24
+    jumps[29, 20] = 24
+    jumps[29, 22] = 25
+    jumps[30, 21] = 25
+    jumps[30, 23] = 26
+    jumps[31, 22] = 26
+
+    return jumps
+
+
+# JUMPS[from, to] returns the position jumped over.
+JUMPS = build_jumps()
+
 class Board(object):
 
     def __init__(self):
@@ -190,9 +275,6 @@ class Board(object):
 
         self.jumps_not_predicted = 0
         self.invalid_move_attempts = 0
-
-        # Constant, just in Board to avoid read_csv in global scope.
-        self.JUMPS = pd.read_csv(filepath_or_buffer='jumps.csv', header=-1, index_col=None)
 
     def board_state(self, player_type):
         if player_type == 'white':
@@ -332,7 +414,8 @@ class Board(object):
 
             # Remove eliminated pieces
             if move_type == 'jump':
-                eliminated = int(self.JUMPS.iloc[pos_init, pos_final])
+                eliminated = JUMPS[pos_init, pos_final]
+                assert eliminated != -1
                 print('Position eliminated: %d' % (eliminated + 1))
                 assert board_vec[eliminated] == -chkr_value or -king_value
                 board_vec[eliminated] = EMPTY
