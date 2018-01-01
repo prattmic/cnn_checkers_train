@@ -301,6 +301,13 @@ class Board(object):
         self.jumps_not_predicted = 0
         self.invalid_move_attempts = 0
 
+    def copy(self):
+        """Returns a deep copy of this board."""
+        b = Board()
+        b.state = self.state.copy()
+        b.jumps_not_predicted = self.jumps_not_predicted
+        b.invalid_move_attempts = self.invalid_move_attempts
+
     def board_state(self, player_type):
         if player_type == 'white':
             return -self.state[::-1, ::-1]
