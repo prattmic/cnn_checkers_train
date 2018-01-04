@@ -46,12 +46,8 @@ def human_move(board):
             for i in range(len(move) - 1):
                 pos_init = int(move[i])
                 pos_final = int(move[i + 1])
-                if abs(pos_final - pos_init) > 5:
-                    move_type = 'jump'
-                else:
-                    move_type = 'standard'
 
-                move_illegal = board.update(positions=[pos_init, pos_final], player_type='white', move_type=move_type)
+                move_illegal = board.update(positions=[pos_init, pos_final], player_type='white')
                 if move_illegal:
                     print('That move is invalid, please try again.')
                 else:

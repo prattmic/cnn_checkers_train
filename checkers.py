@@ -470,9 +470,8 @@ class Board(object):
 
         return moves_list, probs
 
-    def update(self, positions, player_type, move_type):
-
-        # Extract the initial and final positions into ints
+    def update(self, positions, player_type):
+        # Extract the initial and final positions into ints.
         [pos_init, pos_final] = int(positions[0]), (positions[1])
 
         if player_type == 'black':
@@ -485,31 +484,51 @@ class Board(object):
             king_value = WHITE_KING
             chkr_value = WHITE_CHECKER
 
-        # print(pos_init, pos_final)
         board_vec = np.reshape(self.state, (32,))
 
-        if (board_vec[pos_init] == chkr_value or board_vec[pos_init] == king_value) and board_vec[pos_final] == EMPTY:
-            board_vec[pos_final] = board_vec[pos_init]
-            board_vec[pos_init] = EMPTY
-
-            # Assign kings
-            if pos_final in king_pos:
-                board_vec[pos_final] = king_value
-
-            # Remove eliminated pieces
-            if move_type == 'jump':
-                eliminated = JUMPS[pos_init, pos_final]
-                assert eliminated != -1
-                print('Position eliminated: %d' % (eliminated + 1))
-                assert board_vec[eliminated] == -chkr_value or -king_value
-                board_vec[eliminated] = EMPTY
-
-            # Update the board
-            self.state = np.reshape(board_vec, (8, 4))
-            return False
-
-        else:
+        # 1. Move must start from one of our pieces.
+        if board_vec[pos_init] != chkr_value and board_vec[pos_init] != king_value:
+            print("Invalid move %s: doesn't start from our piece" % (positions,))
             return True
+
+        # 2. Move must end on an empty space.
+        if board_vec[pos_final] != EMPTY:
+            print("Invalid move %s: doesn't end on empty piece" % (positions,))
+            return True
+
+        # 3. Move must go to a neighbor or be a valid jump.
+        jumped = None
+        if pos_final in NEIGHBORS[pos_init]:
+            # OK.
+            pass
+        else:
+            jumped = JUMPS[pos_init, pos_final]
+            if jumped == -1:
+                # Not neighbor or jump.
+                print("Invalid move %s: not neighbor or jump" % (positions,))
+                return True
+
+            # 3a. Jump must jump opposing piece.
+            if board_vec[jumped] != -chkr_value and board_vec[jumped] != -king_value:
+                print("Invalid move %s: not jumping opposing piece" % (positions,))
+                return True
+
+        # This move is valid. Actually perform update.
+        board_vec[pos_final] = board_vec[pos_init]
+        board_vec[pos_init] = EMPTY
+
+        # Assign kings
+        if pos_final in king_pos:
+            board_vec[pos_final] = king_value
+
+        # Remove eliminated pieces
+        if jumped is not None:
+            print('Position eliminated: %d' % (jumped + 1))
+            board_vec[jumped] = EMPTY
+
+        # Update the board
+        self.state = np.reshape(board_vec, (8, 4))
+        return False
 
     def move_ai(self, player_type, predictor):
         """Automatically complete a move as the AI.
@@ -528,8 +547,6 @@ class Board(object):
 
         # Handles situation in which jump is available
         if len(available_jumps) > 0:
-
-            move_type = 'jump'
             jump_available = True
 
             while jump_available:
@@ -556,7 +573,7 @@ class Board(object):
                         break
                     final_position = available_jumps[0][1]
                     initial_piece = np.reshape(self.state, (32,))[initial_position]
-                    move_illegal = self.update(available_jumps[0], player_type=player_type, move_type=move_type)
+                    move_illegal = self.update(available_jumps[0], player_type=player_type)
 
                     if move_illegal:
                         print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[0]) + 1))
@@ -579,7 +596,7 @@ class Board(object):
                                 break
                             final_position = move[1]
                             initial_piece = np.reshape(self.state, (32,))[initial_position]
-                            move_illegal = self.update(move, player_type=player_type, move_type=move_type)
+                            move_illegal = self.update(move, player_type=player_type)
 
                             if move_illegal:
                                 print('Model and Find jumps function predicted an invalid move: %s' % (np.array(move) + 1))
@@ -602,7 +619,7 @@ class Board(object):
                             break
                         final_position = available_jumps[ind][1]
                         initial_piece = np.reshape(self.state, (32,))[initial_position]
-                        move_illegal = self.update(available_jumps[ind], player_type=player_type, move_type=move_type)
+                        move_illegal = self.update(available_jumps[ind], player_type=player_type)
 
                         if move_illegal:
                             print('Find Jumps function returned invalid move: %s' % (np.array(available_jumps[ind]) + 1))
@@ -617,14 +634,13 @@ class Board(object):
 
         # For standard moves
         else:
-            move_type = 'standard'
             move_illegal = True
             while move_illegal:
 
                 count = 1
                 for move in moves_list:
 
-                    move_illegal = self.update(move, player_type=player_type, move_type=move_type)
+                    move_illegal = self.update(move, player_type=player_type)
 
                     if move_illegal:
                         print('model predicted invalid move (%s)' % (np.array(move) + 1))
