@@ -396,6 +396,54 @@ class Board(object):
         else:
             return position, neighbor, 'standard'
 
+    # FIXME(prattmic): needs tests!
+    def valid_moves(self, player_type):
+        jumps = self.find_jumps(player_type)
+
+        if player_type == 'black':
+            king_value = BLACK_KING
+            chkr_value = BLACK_CHECKER
+            chkr_directions = [1, 2]
+        else:
+            king_value = WHITE_KING
+            chkr_value = WHITE_CHECKER
+            chkr_directions = [0, 3]
+
+        board_state = np.reshape(self.state, (32,))
+        moves = tuple()
+
+        for position in range(32):
+            piece = board_state[position]
+            neighbors_list = NEIGHBORS[position]
+
+            if piece == chkr_value:
+                directions = chkr_directions
+            elif piece == king_value:
+                directions = range(4)
+            else:
+                # Not our piece.
+                continue
+
+            found_jump = False
+            for jump in jumps:
+                if jump[0] == position:
+                    found_jump = True
+                    moves.append(jump)
+
+            if found_jump:
+                # If a jump is available, it must be taken.
+                continue
+
+            for direction in directions:
+                neighbor = neighbors_list[direction]
+                if neighbor == INVALID:
+                    continue
+
+                if board_state[neighbor] == EMPTY:
+                    moves.append([position, neighbor])
+
+        return moves
+
     def generate_move(self, player_type, output_type, predictor):
 
         board_state = self.board_state(player_type=player_type)
