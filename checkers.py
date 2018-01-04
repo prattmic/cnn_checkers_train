@@ -307,6 +307,7 @@ class Board(object):
         b.state = self.state.copy()
         b.jumps_not_predicted = self.jumps_not_predicted
         b.invalid_move_attempts = self.invalid_move_attempts
+        return b
 
     def board_state(self, player_type):
         if player_type == 'white':
@@ -478,11 +479,12 @@ class Board(object):
             king_pos = BLACK_KING_POS
             king_value = BLACK_KING
             chkr_value = BLACK_CHECKER
-
+            chkr_directions = [1, 2]
         else:
             king_pos = WHITE_KING_POS
             king_value = WHITE_KING
             chkr_value = WHITE_CHECKER
+            chkr_directions = [0, 3]
 
         board_vec = np.reshape(self.state, (32,))
 
@@ -498,17 +500,28 @@ class Board(object):
 
         # 3. Move must go to a neighbor or be a valid jump.
         jumped = None
-        if pos_final in NEIGHBORS[pos_init]:
+
+        neighbors = NEIGHBORS[pos_init]
+        next_neighbors = NEXT_NEIGHBORS[pos_init]
+        if board_vec[pos_init] != king_value:
+            # Normal checkers can only go in two directions.
+            neighbors = [neighbors[chkr_directions[0]], neighbors[chkr_directions[1]]]
+            next_neighbors = [next_neighbors[chkr_directions[0]], next_neighbors[chkr_directions[1]]]
+
+        if pos_final in neighbors:
             # OK.
             pass
         else:
-            jumped = JUMPS[pos_init, pos_final]
-            if jumped == -1:
-                # Not neighbor or jump.
+            # 3a. only allow forward jumps for non-kings.
+            if pos_final not in next_neighbors:
                 print("Invalid move %s: not neighbor or jump" % (positions,))
                 return True
 
-            # 3a. Jump must jump opposing piece.
+            jumped = JUMPS[pos_init, pos_final]
+            # Jump must be valid if in was in next_neighbors.
+            assert jumped != -1
+
+            # 3b. Jump must jump opposing piece.
             if board_vec[jumped] != -chkr_value and board_vec[jumped] != -king_value:
                 print("Invalid move %s: not jumping opposing piece" % (positions,))
                 return True
@@ -517,16 +530,16 @@ class Board(object):
         board_vec[pos_final] = board_vec[pos_init]
         board_vec[pos_init] = EMPTY
 
-        # Assign kings
+        # Assign kings.
         if pos_final in king_pos:
             board_vec[pos_final] = king_value
 
-        # Remove eliminated pieces
+        # Remove eliminated pieces.
         if jumped is not None:
-            print('Position eliminated: %d' % (jumped + 1))
+            print('Position eliminated: %d' % jumped)
             board_vec[jumped] = EMPTY
 
-        # Update the board
+        # Update the board.
         self.state = np.reshape(board_vec, (8, 4))
         return False
 
