@@ -397,7 +397,6 @@ class Board(object):
         else:
             return position, neighbor, 'standard'
 
-    # FIXME(prattmic): needs tests!
     def valid_moves(self, player_type):
         jumps = self.find_jumps(player_type)
 
@@ -411,7 +410,7 @@ class Board(object):
             chkr_directions = [0, 3]
 
         board_state = np.reshape(self.state, (32,))
-        moves = tuple()
+        moves = []
 
         for position in range(32):
             piece = board_state[position]

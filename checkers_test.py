@@ -145,3 +145,95 @@ class TestBoard(unittest.TestCase):
 
         # King can jump backwards.
         self.assertFalse(board.copy().update([13, 20], 'white'))
+
+
+    def test_valid_moves(self):
+        #   x   x   x   x
+        # x   x   x   x
+        #   x   x   x   x
+        # -   -   -   -
+        #   -   _   -   -
+        # o   o   o   o
+        #   o   o   o   o
+        # o   o   o   o
+        #
+        #   00  01  02  03
+        # 04  05  06  07
+        #   08  09  10  11
+        # 12  13  14  15
+        #   16  17  18  19
+        # 20  21  22  23
+        #   24  25  26  27
+        # 28  29  30  31
+        #
+        # x = black
+        # o = white
+
+        board = checkers.Board()
+
+        players = ['white', 'black']
+        for player in players:
+            moves = board.valid_moves(player)
+            self.assertEquals(len(moves), 7)
+            for move in moves:
+                self.assertFalse(board.copy().update(move, player),
+                        msg='player %s move %s' % (player, move))
+
+
+        B = checkers.BLACK_KING
+        W = checkers.WHITE_KING
+        b = checkers.BLACK_CHECKER
+        w = checkers.WHITE_CHECKER
+        e = checkers.EMPTY
+
+        board.state = np.array([
+            [e, e, e, e],
+            [e, e, e, e],
+            [B, b, e, e],
+            [e, W, e, e],
+            [b, w, e, e],
+            [e, e, e, e],
+            [e, e, e, e],
+            [e, e, e, e],
+        ])
+        #   _   _   _   _
+        # _   _   _   _
+        #   X   x   _   _
+        # -   O   -   -
+        #   x   o   -   -
+        # _   _   _   _
+        #   _   _   _   _
+        # _   _   _   _
+        #
+        #   00  01  02  03
+        # 04  05  06  07
+        #   08  09  10  11
+        # 12  13  14  15
+        #   16  17  18  19
+        # 20  21  22  23
+        #   24  25  26  27
+        # 28  29  30  31
+
+        moves = board.valid_moves('white')
+        self.assertEquals(len(moves), 4)
+        self.assertIn([13, 4], moves)
+        self.assertIn([13, 6], moves)
+        self.assertIn([13, 20], moves)
+        self.assertIn([17, 14], moves)
+
+        for move in moves:
+            self.assertFalse(board.copy().update(move, 'white'),
+                    msg='move %s' % (move,))
+
+        moves = board.valid_moves('black')
+        self.assertEquals(len(moves), 6)
+        self.assertIn([8, 4], moves)
+        self.assertIn([8, 5], moves)
+        self.assertIn([8, 12], moves)
+        self.assertIn([9, 14], moves)
+        self.assertIn([16, 20], moves)
+        self.assertIn([16, 21], moves)
+
+        for move in moves:
+            self.assertFalse(board.copy().update(move, 'black'),
+                    msg='move %s' % (move,))
