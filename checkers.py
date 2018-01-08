@@ -397,6 +397,32 @@ class Board(object):
         else:
             return position, neighbor, 'standard'
 
+    def generate_move(self, player_type, output_type, predictor):
+
+        board_state = self.board_state(player_type=player_type)
+        moves_list = list()
+
+        # Assumes both AI are the same CNN model.
+        moves, probs = predict_move.predict_cnn(board_state, output=output_type, predictor=predictor)
+
+        for i in range(1, 11):
+            ind = np.argwhere(moves == i)[0]
+            move = np.zeros([32, 4])
+            move[ind[0], ind[1]] = 1
+            if player_type == 'white':
+                move = move[::-1, :]
+                move = np.concatenate((move[:, 2:], move[:, :2]), axis=1)
+            pos_init, pos_final, move_type = self.get_positions(move, player_type=player_type)
+            moves_list.append([pos_init, pos_final])
+
+            # # If white, flip board back
+            # if player_type == 'white':
+            #     for move in moves_list:
+            #         move[0] = 31 - move[0]
+            #         move[1] = 31 - move[1]
+
+        return moves_list, probs
+
     def valid_moves(self, player_type):
         jumps = self.find_jumps(player_type)
 
@@ -443,32 +469,6 @@ class Board(object):
                     moves.append([position, neighbor])
 
         return moves
-
-    def generate_move(self, player_type, output_type, predictor):
-
-        board_state = self.board_state(player_type=player_type)
-        moves_list = list()
-
-        # Assumes both AI are the same CNN model.
-        moves, probs = predict_move.predict_cnn(board_state, output=output_type, predictor=predictor)
-
-        for i in range(1, 11):
-            ind = np.argwhere(moves == i)[0]
-            move = np.zeros([32, 4])
-            move[ind[0], ind[1]] = 1
-            if player_type == 'white':
-                move = move[::-1, :]
-                move = np.concatenate((move[:, 2:], move[:, :2]), axis=1)
-            pos_init, pos_final, move_type = self.get_positions(move, player_type=player_type)
-            moves_list.append([pos_init, pos_final])
-
-            # # If white, flip board back
-            # if player_type == 'white':
-            #     for move in moves_list:
-            #         move[0] = 31 - move[0]
-            #         move[1] = 31 - move[1]
-
-        return moves_list, probs
 
     def update(self, positions, player_type):
         # Extract the initial and final positions into ints.
