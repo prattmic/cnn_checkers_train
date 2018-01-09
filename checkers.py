@@ -295,8 +295,10 @@ BOARD_INIT = build_init()
 
 class Board(object):
 
-    def __init__(self):
-        self.state = BOARD_INIT.copy()
+    def __init__(self, state=None):
+        self.state = state
+        if self.state is None:
+            self.state = BOARD_INIT.copy()
 
         self.jumps_not_predicted = 0
         self.invalid_move_attempts = 0

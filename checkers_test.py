@@ -68,7 +68,7 @@ class TestBoard(unittest.TestCase):
         w = checkers.WHITE_CHECKER
         e = checkers.EMPTY
 
-        board.state = np.array([
+        board = checkers.Board(np.array([
             [e, e, e, e],
             [e, e, e, e],
             [b, b, e, e],
@@ -77,7 +77,7 @@ class TestBoard(unittest.TestCase):
             [e, e, e, e],
             [e, e, e, e],
             [e, e, e, e],
-        ])
+        ]))
         #   _   _   _   _
         # _   _   _   _
         #   x   x   _   _
@@ -112,7 +112,7 @@ class TestBoard(unittest.TestCase):
         B = checkers.BLACK_KING
         W = checkers.WHITE_KING
 
-        board.state = np.array([
+        board = checkers.Board(np.array([
             [e, e, e, e],
             [e, e, e, e],
             [B, b, e, e],
@@ -121,7 +121,7 @@ class TestBoard(unittest.TestCase):
             [e, e, e, e],
             [e, e, e, e],
             [e, e, e, e],
-        ])
+        ]))
         #   _   _   _   _
         # _   _   _   _
         #   X   x   _   _
@@ -186,7 +186,7 @@ class TestBoard(unittest.TestCase):
         w = checkers.WHITE_CHECKER
         e = checkers.EMPTY
 
-        board.state = np.array([
+        board = checkers.Board(np.array([
             [e, e, e, e],
             [e, e, e, e],
             [B, b, e, e],
@@ -195,7 +195,7 @@ class TestBoard(unittest.TestCase):
             [e, e, e, e],
             [e, e, e, e],
             [e, e, e, e],
-        ])
+        ]))
         #   _   _   _   _
         # _   _   _   _
         #   X   x   _   _
