@@ -293,6 +293,73 @@ def build_init():
 BOARD_INIT = build_init()
 
 
+def new_state():
+    # P1 is white, P2 is black
+    # TODO(prattmic): swap this?
+    #
+    # axis 0 - state history
+    # axis 1 - 0 P1 normal, P1 king, P2 normal, P2 king, color to make move
+    # axis 2 - Board y axis
+    # axis 3 - Board x axis
+    return np.zeros((2, 5, 8, 4))
+
+
+class State(object):
+    """Helper wrapper around checkers state numpy array.
+
+    This object simply provides convience methods. It contains no state beyond
+    the state array itself.
+    """
+
+    def __init__(self, array=None):
+        self.array = array
+        if self.array is None:
+            self.array = new_state()
+
+    def history(self, n):
+        """Pops the n newest moves off the state."""
+        # Delete along history axis (0).
+        a = self.array
+        for i in range(n):
+            a = np.delete(a, 0, 0)
+        return State(a)
+
+    def color(self):
+        """Returns the color to make the next move."""
+        # Grab the first element in the color plane. The entire plane is
+        # identical.
+        return self.array[0, 4, 0, 0]
+
+    def merged(self):
+        """Returns a single 8x4 2-D matrix of board state.
+
+        Uses EMPTY, BLACK_CHECKER, BLACK_KING, WHITE_CHECKER, WHITE_KING values.
+        """
+        # Only use the top move.
+        a = self.array[0].copy()
+
+        white_checker = a[0]
+        np.place(white_checker, white_checker>0, WHITE_CHECKER)
+
+        white_king = a[1]
+        np.place(white_king, white_king>0, WHITE_KING)
+
+        black_checker = a[2]
+        np.place(black_checker, black_checker>0, BLACK_CHECKER)
+
+        black_king = a[3]
+        np.place(black_king, black_king>0, BLACK_KING)
+
+        return white_checker + white_king + black_checker + black_king
+
+    def merged_vec(self):
+        """Returns a 32-entry 1-D vector of board state.
+
+        Uses EMPTY, BLACK_CHECKER, BLACK_KING, WHITE_CHECKER, WHITE_KING values.
+        """
+        return self.merged().reshape((32,))
+
+
 class Board(object):
 
     def __init__(self, state=None):
