@@ -268,31 +268,6 @@ def build_jumps():
 JUMPS = build_jumps()
 
 
-def build_init():
-    b = BLACK_CHECKER
-    w = WHITE_CHECKER
-    e = EMPTY
-
-    a = np.array([
-        [b, b, b, b],
-        [b, b, b, b],
-        [b, b, b, b],
-        [e, e, e, e],
-        [e, e, e, e],
-        [w, w, w, w],
-        [w, w, w, w],
-        [w, w, w, w],
-    ])
-
-    a.flags.writeable = False
-
-    return a
-
-
-# Initial board state. Copy before modifying.
-BOARD_INIT = build_init()
-
-
 def new_state():
     # P1 is white, P2 is black
     # TODO(prattmic): swap this?
@@ -301,7 +276,7 @@ def new_state():
     # axis 1 - 0 P1 normal, P1 king, P2 normal, P2 king, color to make move
     # axis 2 - Board y axis
     # axis 3 - Board x axis
-    return np.zeros((2, 5, 8, 4))
+    return np.zeros((2, 5, 8, 4), np.int8)
 
 
 class State(object):
@@ -316,19 +291,23 @@ class State(object):
         if self.array is None:
             self.array = new_state()
 
-    def history(self, n):
-        """Pops the n newest moves off the state."""
-        # Delete along history axis (0).
-        a = self.array
-        for i in range(n):
-            a = np.delete(a, 0, 0)
-        return State(a)
+    @staticmethod
+    def unmerge(merged, player):
+        """Returns State from a single merged 8x4 2-D matrix of board state.
 
-    def color(self):
-        """Returns the color to make the next move."""
-        # Grab the first element in the color plane. The entire plane is
-        # identical.
-        return self.array[0, 4, 0, 0]
+        Args:
+            merged: 8x4 2-D matric of board state.
+            player: Player to make next move (P1 = 1, P2 = -1)
+        """
+        a = new_state()
+
+        np.place(a[0, 0], merged == WHITE_CHECKER, 1)
+        np.place(a[0, 1], merged == WHITE_KING, 1)
+        np.place(a[0, 2], merged == BLACK_CHECKER, 1)
+        np.place(a[0, 3], merged == BLACK_KING, 1)
+        a[0, 4] = np.full_like(a[0, 4], player)
+
+        return State(a)
 
     def merged(self):
         """Returns a single 8x4 2-D matrix of board state.
@@ -358,6 +337,50 @@ class State(object):
         Uses EMPTY, BLACK_CHECKER, BLACK_KING, WHITE_CHECKER, WHITE_KING values.
         """
         return self.merged().reshape((32,))
+
+    def copy(self):
+        return State(self.array.copy())
+
+    def history(self, n):
+        """Pops the n newest moves off the state."""
+        # Delete along history axis (0).
+        a = self.array
+        for i in range(n):
+            a = np.delete(a, 0, 0)
+        return State(a)
+
+    def color(self):
+        """Returns the color to make the next move."""
+        # Grab the first element in the color plane. The entire plane is
+        # identical.
+        return self.array[0, 4, 0, 0]
+
+
+def build_init():
+    b = BLACK_CHECKER
+    w = WHITE_CHECKER
+    e = EMPTY
+
+    a = np.array([
+        [b, b, b, b],
+        [b, b, b, b],
+        [b, b, b, b],
+        [e, e, e, e],
+        [e, e, e, e],
+        [w, w, w, w],
+        [w, w, w, w],
+        [w, w, w, w],
+    ])
+
+    # Player 1's turn.
+    s = State.unmerge(a, 1)
+    s.array.flags.writeable = False
+
+    return s
+
+
+# Initial board state. Copy before modifying.
+BOARD_INIT = build_init()
 
 
 class Board(object):
