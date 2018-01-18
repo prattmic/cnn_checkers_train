@@ -408,6 +408,7 @@ class Board(object):
             return self.state
 
     def print_board(self):
+        merged = self.state.merged()
         for i in range(8):
             for j in range(4):
                 if i % 2 == 0:
@@ -415,7 +416,7 @@ class Board(object):
 
                 # We print the board 'upside down'. i.e., black/position 0 at
                 # the bottom.
-                v = self.state[7 - i, 3 - j]
+                v = merged[7 - i, 3 - j]
 
                 if v == BLACK_CHECKER:
                     print('x', end=' ')
@@ -445,7 +446,7 @@ class Board(object):
             chkr_value = WHITE_CHECKER
             chkr_directions = [0, 3]
 
-        board_state = np.reshape(self.state, (32,))
+        board_state = self.state.merged_vec()
 
         for position in range(32):
             piece = board_state[position]
@@ -527,7 +528,7 @@ class Board(object):
             chkr_value = WHITE_CHECKER
             chkr_directions = [0, 3]
 
-        board_state = np.reshape(self.state, (32,))
+        board_state = self.state.merged_vec()
         moves = []
 
         for position in range(32):
@@ -577,7 +578,7 @@ class Board(object):
             chkr_value = WHITE_CHECKER
             chkr_directions = [0, 3]
 
-        board_vec = np.reshape(self.state, (32,))
+        board_vec = self.state.merged_vec()
 
         # 1. Move must start from one of our pieces.
         if board_vec[pos_init] != chkr_value and board_vec[pos_init] != king_value:
