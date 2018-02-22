@@ -296,7 +296,7 @@ class State(object):
         """Returns State from a single merged 8x4 2-D matrix of board state.
 
         Args:
-            merged: 8x4 2-D matric of board state.
+            merged: 8x4 2-D matrix of board state.
             player: Player to make next move (P1 = 1, P2 = -1)
         """
         a = new_state()
