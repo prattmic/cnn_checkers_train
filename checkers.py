@@ -273,7 +273,7 @@ def new_state():
     # TODO(prattmic): swap this?
     #
     # axis 0 - state history
-    # axis 1 - 0 P1 normal, P1 king, P2 normal, P2 king, color to make move
+    # axis 1 - P1 normal, P1 king, P2 normal, P2 king, color to make move
     # axis 2 - Board y axis
     # axis 3 - Board x axis
     return np.zeros((2, 5, 8, 4), np.int8)
